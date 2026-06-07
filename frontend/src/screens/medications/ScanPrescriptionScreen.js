@@ -88,14 +88,14 @@ export default function ScanPrescriptionScreen({ navigation }) {
             </View>
 
             <View style={[styles.actionRow, rtl.row]}>
-              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.colors.primary }]} onPress={takePhoto}>
+              <TouchableOpacity style={[styles.actionBtn, rtl.row, { backgroundColor: theme.colors.primary }]} onPress={takePhoto}>
                 <Ionicons name="camera" size={24} color="#FFF" />
-                <Text style={styles.actionBtnText}>{t('Take Photo')}</Text>
+                <Text style={[styles.actionBtnText, { color: '#FFF' }]}>{t('Take Photo')}</Text>
               </TouchableOpacity>
               
-              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border }]} onPress={pickImage}>
-                <Ionicons name="images" size={24} color={theme.colors.text} />
-                <Text style={[styles.actionBtnText, { color: theme.colors.text }]}>{t('Gallery')}</Text>
+              <TouchableOpacity style={[styles.actionBtn, rtl.row, { backgroundColor: theme.colors.primary + '15' }]} onPress={pickImage}>
+                <Ionicons name="images" size={24} color={theme.colors.primary} />
+                <Text style={[styles.actionBtnText, { color: theme.colors.primary }]}>{t('Gallery')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -111,13 +111,13 @@ export default function ScanPrescriptionScreen({ navigation }) {
             ) : null}
 
             {!isScanning && !results ? (
-              <View style={styles.repickRow}>
-                <TouchableOpacity style={[styles.secondaryBtn, { borderColor: theme.colors.primary }]} onPress={() => setImageUri(null)}>
+              <View style={[styles.repickRow, rtl.row]}>
+                <TouchableOpacity style={[styles.secondaryBtn, { backgroundColor: theme.colors.primary + '15', borderWidth: 0 }]} onPress={() => setImageUri(null)}>
                   <Text style={[styles.secondaryBtnText, { color: theme.colors.primary }]}>{t('Retake')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: theme.colors.primary }]} onPress={simulateAIScan}>
+                <TouchableOpacity style={[styles.primaryBtn, rtl.row, { backgroundColor: theme.colors.primary }]} onPress={simulateAIScan}>
                   <Ionicons name="sparkles" size={20} color="#FFF" />
-                  <Text style={[styles.primaryBtnText, { color: '#FFF', marginStart: 8 }]}>{t('Extract Data')}</Text>
+                  <Text style={[styles.primaryBtnText, { color: '#FFF', marginHorizontal: 8 }]}>{t('Extract Data')}</Text>
                 </TouchableOpacity>
               </View>
             ) : null}
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   headerGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 200, opacity: 0.15 },
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16, alignItems: 'center', justifyContent: 'space-between' },
   backButton: { padding: 4 },
-  headerTitle: { fontSize: 22, fontWeight: 'bold' },
+  headerTitle: { fontSize: 20, fontWeight: 'bold', flex: 1, textAlign: 'center', marginHorizontal: 10 },
   content: { padding: 20, paddingBottom: 40 },
   placeholderContainer: { alignItems: 'center', marginTop: 40 },
   lottiePlaceholder: { width: '100%', height: 250, borderRadius: 24, borderWidth: 2, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', padding: 32, marginBottom: 32 },

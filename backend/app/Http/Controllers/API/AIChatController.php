@@ -5,37 +5,97 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
 class AIChatController extends Controller
 {
     public function chat(Request $request)
     {
+        // Increase maximum execution time to allow long AI responses
+        set_time_limit(120);
+
         $validated = $request->validate([
             'message' => 'required|string|max:1000'
         ]);
 
-        $userMessage = strtolower($validated['message']);
-        
-        // Mock AI Responses based on keywords
-        $aiResponse = "I'm here for you. Tell me more about how you're feeling today.";
+        $userMessage = $validated['message'];
+        $apiKey = env('GEMINI_API_KEY');
 
-        if (str_contains($userMessage, 'anxious') || str_contains($userMessage, 'stress')) {
-            $aiResponse = "It's completely normal to feel stressed. Have you tried taking a few deep breaths? I can guide you through a quick breathing exercise if you'd like.";
-        } elseif (str_contains($userMessage, 'sad') || str_contains($userMessage, 'depress')) {
-            $aiResponse = "I'm so sorry you're feeling this way. Remember that it's okay to have tough days. Is there anything specific on your mind?";
-        } elseif (str_contains($userMessage, 'happy') || str_contains($userMessage, 'good')) {
-            $aiResponse = "That's wonderful to hear! Hold onto that positive feeling. What made today a good day?";
-        } elseif (str_contains($userMessage, 'sleep') || str_contains($userMessage, 'tired')) {
-            $aiResponse = "Rest is incredibly important for your mental health. Try to create a calming bedtime routine tonight. Unplugging from screens 30 minutes before bed helps.";
-        } elseif (str_contains($userMessage, 'help')) {
-            $aiResponse = "I'm here to listen and support you. Please remember I'm an AI assistant. If you are in immediate danger or experiencing a crisis, please reach out to emergency services or a trusted loved one.";
+        if (!$apiKey) {
+            return response()->json([
+                'success' => false,
+                'message' => 'API Key is missing.'
+            ], 500);
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'role' => 'assistant',
-                'content' => $aiResponse
+        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' . $apiKey;
+
+        $systemPrompt = "You are a friendly, compassionate, and professional medical and mental health AI assistant for the 'Remind Me' application. Your goal is to support users, provide comforting advice, and answer health-related questions accurately. Always remind users to consult a real doctor for serious conditions. Reply in the same language the user speaks. Keep responses concise, warm, and helpful.\n\nUser Message: ";
+
+        $payload = [
+            'contents' => [
+                [
+                    'parts' => [
+                        ['text' => $systemPrompt . $userMessage]
+                    ]
+                ]
+            ],
+            'generationConfig' => [
+                'temperature' => 0.7,
+                'maxOutputTokens' => 4000,
             ]
-        ]);
+        ];
+
+        try {
+            $response = Http::timeout(60)
+                ->withoutVerifying()
+                ->withHeaders(['x-goog-api-key' => $apiKey])
+                ->post($url, $payload);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                
+                if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+                    $aiText = $data['candidates'][0]['content']['parts'][0]['text'];
+                    
+                    return response()->json([
+                        'success' => true,
+                        'data' => [
+                            'role' => 'assistant',
+                            'content' => trim($aiText)
+                        ]
+                    ]);
+                }
+            }
+            
+            $errorBody = $response->json();
+            $errorMessageAr = 'فشل الاتصال بالذكاء الاصطناعي حالياً.';
+            $errorMessageEn = 'Failed to get response from AI.';
+
+            if (isset($errorBody['error']['code']) && $errorBody['error']['code'] == 503) {
+                 $errorMessageAr = 'خوادم الذكاء الاصطناعي عليها ضغط عالٍ حالياً. يرجى المحاولة بعد قليل.';
+                 $errorMessageEn = 'AI servers are currently experiencing high demand. Please try again shortly.';
+            }
+
+            Log::error('Gemini API Error: ' . $response->body());
+            
+            return response()->json([
+                'success' => false,
+                'message_ar' => $errorMessageAr,
+                'message_en' => $errorMessageEn,
+                'message' => $errorMessageAr
+            ], 503);
+
+        } catch (\Exception $e) {
+            Log::error('Gemini Exception: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message_ar' => 'حدث خطأ أثناء الاتصال بالخادم.',
+                'message_en' => 'An error occurred while connecting to AI.',
+                'message' => 'حدث خطأ أثناء الاتصال بالخادم.'
+            ], 500);
+        }
     }
 }

@@ -37,7 +37,8 @@ export default function AIChatScreen({ navigation }) {
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error(error);
-      const errorMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: "Sorry, I'm having trouble connecting right now." };
+      const errorText = error?.message || error?.toString() || "عذراً، أواجه مشكلة في الاتصال بالخادم حالياً.";
+      const errorMessage = { id: (Date.now() + 1).toString(), role: 'assistant', content: errorText.replace('Error: ', '') };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setLoading(false);

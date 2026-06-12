@@ -11,9 +11,9 @@ export default function EmergencyContactScreen({ navigation, route }) {
   const rtl = useRTLStyle();
   const { t } = useTranslation();
   
-  const [name, setName] = useState('');
+  const [name, setName] = useState(route.params?.emergency_contact_name || '');
   const [relation, setRelation] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(route.params?.emergency_contact_phone || '');
 
   const handleNext = () => {
     navigation.navigate('UploadMedicalReports', {

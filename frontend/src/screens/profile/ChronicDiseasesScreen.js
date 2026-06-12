@@ -15,7 +15,7 @@ export default function ChronicDiseasesScreen({ navigation, route }) {
   const rtl = useRTLStyle();
   const { t } = useTranslation();
   
-  const [selectedDiseases, setSelectedDiseases] = useState([]);
+  const [selectedDiseases, setSelectedDiseases] = useState(route.params?.chronic_diseases || []);
   const [otherDisease, setOtherDisease] = useState('');
 
   const toggleDisease = (disease) => {

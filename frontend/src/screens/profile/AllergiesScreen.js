@@ -15,7 +15,7 @@ export default function AllergiesScreen({ navigation, route }) {
   const rtl = useRTLStyle();
   const { t } = useTranslation();
   
-  const [selectedAllergies, setSelectedAllergies] = useState([]);
+  const [selectedAllergies, setSelectedAllergies] = useState(route.params?.allergies || []);
   const [otherAllergy, setOtherAllergy] = useState('');
 
   const toggleAllergy = (allergy) => {

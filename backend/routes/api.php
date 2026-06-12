@@ -41,6 +41,7 @@ Route::prefix('v1')->group(function () {
         
         // Drug Interactions
         Route::post('/interactions/check', [\App\Http\Controllers\API\InteractionController::class, 'check']);
+        Route::post('/scan-prescription', [\App\Http\Controllers\API\OCRController::class, 'scanPrescription']);
         
         // Mental Health & Mood
         Route::get('/mood-logs', [\App\Http\Controllers\API\MoodController::class, 'index']);

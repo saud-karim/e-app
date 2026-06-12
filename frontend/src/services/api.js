@@ -55,6 +55,7 @@ export default {
   addMedication: (data) => apiCall('/medications', { method: 'POST', body: JSON.stringify(data) }),
   updateMedication: (id, data) => apiCall(`/medications/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteMedication: (id) => apiCall(`/medications/${id}`, { method: 'DELETE' }),
+  scanPrescription: (data) => apiCall('/scan-prescription', { method: 'POST', body: JSON.stringify(data) }),
   logIntake: (data) => apiCall('/medication-logs', { method: 'POST', body: JSON.stringify(data) }),
   
   // Dashboard
@@ -74,6 +75,7 @@ export default {
   getAdherenceReport: () => apiCall('/reports/adherence'),
 
   // Profile
+  getProfile: () => apiCall('/profile'),
   updateProfile: (data) => apiCall('/profile', { method: 'POST', body: JSON.stringify(data) }),
   uploadMedicalReport: (formData) => apiCall('/profile/reports', { method: 'POST', body: formData }),
 

@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useRTLStyle } from '../../theme/RTLContext';
+import api from '../../services/api';
 
 export default function ScanPrescriptionScreen({ navigation }) {
   const { theme } = useTheme();
@@ -14,6 +15,7 @@ export default function ScanPrescriptionScreen({ navigation }) {
   const { t } = useTranslation();
 
   const [imageUri, setImageUri] = useState(null);
+  const [imageBase64, setImageBase64] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [results, setResults] = useState(null);
 
@@ -22,10 +24,12 @@ export default function ScanPrescriptionScreen({ navigation }) {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 0.8,
+      base64: true,
     });
 
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
+      setImageBase64(result.assets[0].base64);
       setResults(null);
     }
   };
@@ -40,24 +44,32 @@ export default function ScanPrescriptionScreen({ navigation }) {
     let result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       quality: 0.8,
+      base64: true,
     });
 
     if (!result.canceled) {
       setImageUri(result.assets[0].uri);
+      setImageBase64(result.assets[0].base64);
       setResults(null);
     }
   };
 
-  const simulateAIScan = () => {
+  const simulateAIScan = async () => {
+    if (!imageBase64) return;
     setIsScanning(true);
-    // Simulate AI processing delay
-    setTimeout(() => {
+    try {
+      const response = await api.scanPrescription({ image: imageBase64 });
+      if (response.success && response.data) {
+        setResults(response.data);
+      } else {
+        alert(response.message || t('Failed to scan prescription'));
+      }
+    } catch (e) {
+      console.log(e);
+      alert(t('An error occurred during AI analysis.'));
+    } finally {
       setIsScanning(false);
-      setResults([
-        { id: 1, name: 'Amoxicillin', dosage: '500', unit: 'mg', frequency: 'Twice a day' },
-        { id: 2, name: 'Panadol Advance', dosage: '500', unit: 'mg', frequency: 'Every 8 hours' },
-      ]);
-    }, 3000);
+    }
   };
 
   return (

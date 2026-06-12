@@ -11,10 +11,10 @@ export default function AgeGenderScreen({ navigation, route }) {
   const rtl = useRTLStyle();
   const { t } = useTranslation();
   
-  const [day, setDay] = useState('');
-  const [month, setMonth] = useState('');
-  const [year, setYear] = useState('');
-  const [gender, setGender] = useState('');
+  const [day, setDay] = useState(route.params?.age ? '01' : '');
+  const [month, setMonth] = useState(route.params?.age ? '01' : '');
+  const [year, setYear] = useState(route.params?.age ? (new Date().getFullYear() - route.params.age).toString() : '');
+  const [gender, setGender] = useState(route.params?.gender || '');
 
   const handleNext = () => {
     let age = null;

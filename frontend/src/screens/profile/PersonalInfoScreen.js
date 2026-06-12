@@ -6,6 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRTLStyle } from '../../theme/RTLContext';
 
+import api from '../../services/api';
+
 const BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
 export default function PersonalInfoScreen({ navigation, route }) {
@@ -13,9 +15,37 @@ export default function PersonalInfoScreen({ navigation, route }) {
   const rtl = useRTLStyle();
   const { t } = useTranslation();
   
-  const [height, setHeight] = useState('');
-  const [weight, setWeight] = useState('');
-  const [bloodType, setBloodType] = useState('');
+  const [height, setHeight] = useState(route.params?.height ? route.params.height.toString() : '');
+  const [weight, setWeight] = useState(route.params?.weight ? route.params.weight.toString() : '');
+  const [bloodType, setBloodType] = useState(route.params?.blood_type || '');
+  const [loading, setLoading] = useState(false);
+
+  React.useEffect(() => {
+    // Fetch existing profile if available and not already passed via params
+    if (!route.params?.blood_type) {
+      fetchProfile();
+    }
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const res = await api.getProfile();
+      if (res.data && res.data.profile) {
+        const p = res.data.profile;
+        if (p.height) setHeight(p.height.toString());
+        if (p.weight) setWeight(p.weight.toString());
+        if (p.blood_type) setBloodType(p.blood_type);
+        
+        // Merge into route.params so next screens get it
+        navigation.setParams({ ...route.params, ...p });
+      }
+    } catch (e) {
+      console.log('No existing profile found or error', e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleNext = () => {
     navigation.navigate('AgeGender', {

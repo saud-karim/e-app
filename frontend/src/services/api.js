@@ -15,9 +15,15 @@ const apiCall = async (endpoint, options = {}) => {
   
   const headers = {
     'Accept': 'application/json',
-    'Content-Type': 'application/json',
     ...options.headers,
   };
+
+  if (options.body && options.body instanceof FormData) {
+    // Let the browser set Content-Type for FormData
+    delete headers['Content-Type'];
+  } else {
+    headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+  }
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -42,6 +48,7 @@ export default {
   login: (credentials) => apiCall('/login', { method: 'POST', body: JSON.stringify(credentials) }),
   testLogin: () => apiCall('/test-login', { method: 'POST' }),
   register: (data) => apiCall('/register', { method: 'POST', body: JSON.stringify(data) }),
+  verifyOtp: (data) => apiCall('/verify-otp', { method: 'POST', body: JSON.stringify(data) }),
   
   // Medications
   getMedications: () => apiCall('/medications'),
@@ -65,6 +72,10 @@ export default {
 
   // Reports
   getAdherenceReport: () => apiCall('/reports/adherence'),
+
+  // Profile
+  updateProfile: (data) => apiCall('/profile', { method: 'POST', body: JSON.stringify(data) }),
+  uploadMedicalReport: (formData) => apiCall('/profile/reports', { method: 'POST', body: formData }),
 
   // Caregivers
   getCaregivers: () => apiCall('/caregivers'),

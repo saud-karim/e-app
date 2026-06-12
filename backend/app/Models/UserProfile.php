@@ -8,7 +8,8 @@ class UserProfile extends Model
 {
     protected $fillable = [
         'user_id', 'age', 'gender', 'chronic_diseases', 
-        'allergies', 'emergency_contact_name', 'emergency_contact_phone'
+        'allergies', 'emergency_contact_name', 'emergency_contact_phone',
+        'height', 'weight', 'blood_type'
     ];
 
     protected function casts(): array

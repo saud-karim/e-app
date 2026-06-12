@@ -8,7 +8,7 @@ import { useRTLStyle } from '../../theme/RTLContext';
 
 const BLOOD_TYPES = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
-export default function PersonalInfoScreen({ navigation }) {
+export default function PersonalInfoScreen({ navigation, route }) {
   const { theme } = useTheme();
   const rtl = useRTLStyle();
   const { t } = useTranslation();
@@ -18,7 +18,12 @@ export default function PersonalInfoScreen({ navigation }) {
   const [bloodType, setBloodType] = useState('');
 
   const handleNext = () => {
-    navigation.navigate('AgeGender');
+    navigation.navigate('AgeGender', {
+      ...route.params,
+      height,
+      weight,
+      blood_type: bloodType
+    });
   };
 
   return (

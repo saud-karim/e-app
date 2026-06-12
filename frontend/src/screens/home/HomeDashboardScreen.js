@@ -33,6 +33,18 @@ export default function HomeDashboardScreen({ navigation }) {
     }
   };
 
+  const getRiskStyles = (score) => {
+    if (score == null || score <= 20) {
+      return { colors: ['#10B981', '#34D399'], icon: 'checkmark-circle' };
+    } else if (score <= 50) {
+      return { colors: ['#F59E0B', '#FBBF24'], icon: 'alert-circle' };
+    } else {
+      return { colors: ['#EF4444', '#F87171'], icon: 'warning' };
+    }
+  };
+
+  const riskStyles = getRiskStyles(dashboardData?.riskScore);
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <GlobalHeader showGradient={false} />
@@ -41,13 +53,13 @@ export default function HomeDashboardScreen({ navigation }) {
 
         {/* Risk Score Widget */}
         <LinearGradient
-          colors={['#EF4444', '#F87171']}
+          colors={riskStyles.colors}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.riskWidget}
         >
           <View style={styles.riskHeader}>
-            <Ionicons name="warning" size={24} color="#FFF" />
+            <Ionicons name={riskStyles.icon} size={24} color="#FFF" />
             <Text style={styles.riskTitle}>{t('Health Risk Score')}</Text>
           </View>
           <View style={styles.riskBody}>
@@ -153,7 +165,7 @@ export default function HomeDashboardScreen({ navigation }) {
 
             <TouchableOpacity 
               style={[styles.actionCard, { backgroundColor: theme.colors.surface }]}
-              onPress={() => navigation.navigate('MentalDashboard')}
+              onPress={() => navigation.navigate('MentalHealth')}
             >
               <View style={[styles.actionIcon, { backgroundColor: '#3B82F615' }]}>
                 <Ionicons name="heart" size={32} color="#3B82F6" />

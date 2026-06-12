@@ -28,6 +28,9 @@ class ProfileController extends Controller
             'allergies' => 'nullable|array',
             'emergency_contact_name' => 'nullable|string|max:255',
             'emergency_contact_phone' => 'nullable|string|max:255',
+            'height' => 'nullable|numeric',
+            'weight' => 'nullable|numeric',
+            'blood_type' => 'nullable|string|max:5',
         ]);
 
         $profile = UserProfile::updateOrCreate(

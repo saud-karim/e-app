@@ -5,22 +5,73 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRTLStyle } from '../../theme/RTLContext';
+import * as DocumentPicker from 'expo-document-picker';
+import api from '../../services/api';
 
-export default function UploadMedicalReportsScreen({ navigation }) {
+export default function UploadMedicalReportsScreen({ navigation, route }) {
   const { theme } = useTheme();
   const rtl = useRTLStyle();
   const { t } = useTranslation();
   
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleUpload = () => {
-    // Logic to select and upload document (via DocumentPicker)
-    // For now we just mock adding a file
-    setUploadedFiles([...uploadedFiles, `Report_${uploadedFiles.length + 1}.pdf`]);
+  const handleUpload = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'image/*'],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const file = result.assets[0];
+        setUploadedFiles([...uploadedFiles, file]);
+      }
+    } catch (e) {
+      setError(t('Failed to pick document'));
+    }
   };
 
-  const handleFinish = () => {
-    // Submit all data to backend and finalize onboarding
+  const handleFinish = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const profileData = route.params || {};
+      
+      // Save profile data
+      const response = await api.updateProfile(profileData);
+      
+      if (response.success) {
+        // Upload files if any
+        for (const file of uploadedFiles) {
+          const formData = new FormData();
+          if (Platform.OS === 'web' && file.file) {
+            formData.append('report', file.file);
+          } else {
+            formData.append('report', {
+              uri: file.uri,
+              name: file.name,
+              type: file.mimeType || 'application/octet-stream'
+            });
+          }
+          
+          await api.uploadMedicalReport(formData);
+        }
+        
+        navigation.navigate('Main');
+      } else {
+        setError(response.message_ar || response.message_en || t('Failed to save profile'));
+      }
+    } catch (e) {
+      setError(e.message || t('An error occurred'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSkip = () => {
     navigation.navigate('Main');
   };
 
@@ -64,6 +115,13 @@ export default function UploadMedicalReportsScreen({ navigation }) {
         <View style={[styles.card, { backgroundColor: theme.colors.surface, shadowColor: theme.colors.text }]}>
           <View style={styles.form}>
             
+            {error ? (
+              <View style={[styles.errorBox, { backgroundColor: '#EF444420', borderColor: '#EF4444' }]}>
+                <Ionicons name="alert-circle" size={20} color="#EF4444" />
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : null}
+            
             <TouchableOpacity 
               style={[styles.uploadBox, { backgroundColor: theme.colors.background, borderColor: theme.colors.primary }]}
               onPress={handleUpload}
@@ -84,7 +142,7 @@ export default function UploadMedicalReportsScreen({ navigation }) {
                 {uploadedFiles.map((file, index) => (
                   <View key={index} style={[styles.fileItem, rtl.row, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
                     <Ionicons name="document" size={24} color={theme.colors.primary} />
-                    <Text style={[styles.fileName, { color: theme.colors.text }]}>{file}</Text>
+                    <Text style={[styles.fileName, { color: theme.colors.text }]}>{file.name}</Text>
                     <TouchableOpacity onPress={() => setUploadedFiles(uploadedFiles.filter((_, i) => i !== index))}>
                       <Ionicons name="close-circle" size={24} color={theme.colors.notification} />
                     </TouchableOpacity>
@@ -97,6 +155,7 @@ export default function UploadMedicalReportsScreen({ navigation }) {
               activeOpacity={0.8}
               onPress={handleFinish}
               style={[styles.buttonContainer, { marginTop: 32 }]}
+              disabled={loading}
             >
               <LinearGradient
                 colors={['#10B981', '#34D399']}
@@ -104,14 +163,14 @@ export default function UploadMedicalReportsScreen({ navigation }) {
                 end={{ x: 1, y: 0 }}
                 style={[styles.button, rtl.row, rtl.row]}
               >
-                <Text style={styles.buttonText}>{t('Complete Setup')}</Text>
-                <Ionicons name="checkmark-circle" size={20} color="#FFF" style={styles.buttonIcon} />
+                <Text style={styles.buttonText}>{loading ? t('Saving...') : t('Complete Setup')}</Text>
+                {!loading && <Ionicons name="checkmark-circle" size={20} color="#FFF" style={styles.buttonIcon} />}
               </LinearGradient>
             </TouchableOpacity>
             
             <TouchableOpacity 
               style={styles.skipButton}
-              onPress={handleFinish}
+              onPress={handleSkip}
             >
               <Text style={[styles.skipButtonText, { color: theme.colors.text + '80' }]}>{t('Skip for now')}</Text>
             </TouchableOpacity>
@@ -290,5 +349,19 @@ const styles = StyleSheet.create({
   skipButtonText: {
     fontSize: 15,
     fontWeight: '600',
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  errorText: {
+    color: '#EF4444',
+    marginStart: 8,
+    flex: 1,
+    fontSize: 14,
   },
 });

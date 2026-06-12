@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRTLStyle } from '../../theme/RTLContext';
 
-export default function AgeGenderScreen({ navigation }) {
+export default function AgeGenderScreen({ navigation, route }) {
   const { theme } = useTheme();
   const rtl = useRTLStyle();
   const { t } = useTranslation();
@@ -17,7 +17,15 @@ export default function AgeGenderScreen({ navigation }) {
   const [gender, setGender] = useState('');
 
   const handleNext = () => {
-    navigation.navigate('ChronicDiseases');
+    let age = null;
+    if (year) {
+      age = new Date().getFullYear() - parseInt(year);
+    }
+    navigation.navigate('ChronicDiseases', {
+      ...route.params,
+      age,
+      gender
+    });
   };
 
   return (

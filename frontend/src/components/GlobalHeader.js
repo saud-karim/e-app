@@ -48,9 +48,10 @@ export default function GlobalHeader({ title, subtitle, showGradient = true }) {
         <View style={[styles.headerActions, rtl.row]}>
           <TouchableOpacity 
             style={[styles.iconButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
-            onPress={() => navigation.navigate('ReminderNotification')}
+            onPress={() => navigation.navigate('NotificationsList')}
           >
             <Ionicons name="notifications-outline" size={22} color={theme.colors.text} />
+            {/* Show badge conditionally later if needed */}
             <View style={styles.badge} />
           </TouchableOpacity>
           

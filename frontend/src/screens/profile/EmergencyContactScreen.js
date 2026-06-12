@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRTLStyle } from '../../theme/RTLContext';
 
-export default function EmergencyContactScreen({ navigation }) {
+export default function EmergencyContactScreen({ navigation, route }) {
   const { theme } = useTheme();
   const rtl = useRTLStyle();
   const { t } = useTranslation();
@@ -16,7 +16,12 @@ export default function EmergencyContactScreen({ navigation }) {
   const [phone, setPhone] = useState('');
 
   const handleNext = () => {
-    navigation.navigate('UploadMedicalReports');
+    navigation.navigate('UploadMedicalReports', {
+      ...route.params,
+      emergency_contact_name: name,
+      emergency_contact_phone: phone
+      // relation can be stored locally or concatenated, but backend only expects name and phone
+    });
   };
 
   return (

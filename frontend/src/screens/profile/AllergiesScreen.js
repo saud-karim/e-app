@@ -10,7 +10,7 @@ const COMMON_ALLERGIES = [
   'Peanuts', 'Dust', 'Penicillin', 'Pollen', 'Shellfish', 'None'
 ];
 
-export default function AllergiesScreen({ navigation }) {
+export default function AllergiesScreen({ navigation, route }) {
   const { theme } = useTheme();
   const rtl = useRTLStyle();
   const { t } = useTranslation();
@@ -37,7 +37,17 @@ export default function AllergiesScreen({ navigation }) {
   };
 
   const handleNext = () => {
-    navigation.navigate('EmergencyContact');
+    let finalAllergies = [...selectedAllergies];
+    if (otherAllergy && !finalAllergies.includes(otherAllergy)) {
+      finalAllergies.push(otherAllergy);
+    }
+    if (finalAllergies.length > 1 && finalAllergies.includes('None')) {
+       finalAllergies = finalAllergies.filter(a => a !== 'None');
+    }
+    navigation.navigate('EmergencyContact', {
+      ...route.params,
+      allergies: finalAllergies
+    });
   };
 
   return (

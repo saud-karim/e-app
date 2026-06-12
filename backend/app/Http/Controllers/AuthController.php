@@ -26,7 +26,8 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $otp = rand(1000, 9999);
+        // Set fixed OTP for testing purposes
+        $otp = '1234';
 
         $user = User::create([
             'name' => $validated['name'],

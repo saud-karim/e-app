@@ -18,14 +18,17 @@ import MenuScreen from '../screens/settings/MenuScreen';
 import SettingsScreen from '../screens/settings/SettingsScreen';
 import SelfAssessmentScreen from '../screens/mentalHealth/SelfAssessmentScreen';
 import AssessmentResultsScreen from '../screens/mentalHealth/AssessmentResultsScreen';
+import NotificationsListScreen from '../screens/notifications/NotificationsListScreen';
 
 const Stack = createNativeStackNavigator();
+
+import { navigationRef } from './navigationRef';
 
 export default function AppNavigator() {
   const { isDark } = useTheme();
 
   return (
-    <NavigationContainer theme={isDark ? DarkTheme : LightTheme}>
+    <NavigationContainer ref={navigationRef} theme={isDark ? DarkTheme : LightTheme}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {/* For now, we default to Auth flow */}
         <Stack.Screen name="Auth" component={AuthNavigator} />
@@ -52,6 +55,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="SelfAssessment" component={SelfAssessmentScreen} />
         <Stack.Screen name="AssessmentResults" component={AssessmentResultsScreen} />
+        <Stack.Screen name="NotificationsList" component={NotificationsListScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

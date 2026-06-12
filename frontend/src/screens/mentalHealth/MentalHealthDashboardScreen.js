@@ -210,9 +210,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 4,
+    textAlign: 'center',
+    width: '100%',
   },
   actionSubtitle: {
     fontSize: 13,
+    textAlign: 'center',
+    width: '100%',
   },
   sectionTitle: {
     fontSize: 18,

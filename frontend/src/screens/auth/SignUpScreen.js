@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRTLStyle } from '../../theme/RTLContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '../../services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -19,15 +20,49 @@ export default function SignUpScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSignUp = async () => {
-    if (name) {
-      await AsyncStorage.setItem('user_name', name);
+    setError(null);
+    if (!name || !emailOrPhone || !password || !passwordConfirmation) {
+      setError(t('Please fill all fields'));
+      return;
     }
-    if (emailOrPhone) {
-      await AsyncStorage.setItem('user_email', emailOrPhone);
+    if (password !== passwordConfirmation) {
+      setError(t('Passwords do not match'));
+      return;
     }
-    navigation.navigate('OTPVerification', { user_id: 1 });
+
+    try {
+      setLoading(true);
+      const payload = {
+        name,
+        password,
+        password_confirmation: passwordConfirmation
+      };
+      
+      if (emailOrPhone.includes('@')) {
+        payload.email = emailOrPhone;
+      } else {
+        payload.phone = emailOrPhone;
+      }
+
+      const response = await api.register(payload);
+      
+      if (response.success && response.data?.user_id) {
+        await AsyncStorage.setItem('user_name', name);
+        if (payload.email) await AsyncStorage.setItem('user_email', payload.email);
+
+        navigation.navigate('OTPVerification', { user_id: response.data.user_id });
+      } else {
+        setError(response.message_ar || response.message_en || t('Registration failed'));
+      }
+    } catch (e) {
+      setError(e.message || t('An error occurred'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -60,6 +95,13 @@ export default function SignUpScreen({ navigation }) {
 
         <View style={[styles.card, { backgroundColor: theme.colors.surface, shadowColor: theme.colors.text }]}>
           <View style={styles.form}>
+            
+            {error ? (
+              <View style={[styles.errorBox, { backgroundColor: '#EF444420', borderColor: '#EF4444' }]}>
+                <Ionicons name="alert-circle" size={20} color="#EF4444" />
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : null}
             
             <View style={[styles.inputContainer, rtl.row, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
               <Ionicons name="person-outline" size={20} color={theme.colors.text + '80'} style={styles.inputIcon} />
@@ -115,6 +157,7 @@ export default function SignUpScreen({ navigation }) {
               activeOpacity={0.8}
               onPress={handleSignUp}
               style={styles.buttonContainer}
+              disabled={loading}
             >
               <LinearGradient
                 colors={[theme.colors.primary, '#6B89FF']}
@@ -122,8 +165,8 @@ export default function SignUpScreen({ navigation }) {
                 end={{ x: 1, y: 0 }}
                 style={[styles.button, rtl.row, rtl.row]}
               >
-                <Text style={styles.buttonText}>{t('Sign Up')}</Text>
-                <Ionicons name="arrow-forward" size={20} color="#FFF" style={styles.buttonIcon} />
+                <Text style={styles.buttonText}>{loading ? t('Creating...') : t('Sign Up')}</Text>
+                {!loading && <Ionicons name="arrow-forward" size={20} color="#FFF" style={styles.buttonIcon} />}
               </LinearGradient>
             </TouchableOpacity>
 
@@ -265,5 +308,19 @@ const styles = StyleSheet.create({
   },
   loginLink: {
     fontWeight: 'bold',
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  errorText: {
+    color: '#EF4444',
+    marginStart: 8,
+    flex: 1,
+    fontSize: 14,
   },
 });

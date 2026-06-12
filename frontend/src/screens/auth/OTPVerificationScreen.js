@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRTLStyle } from '../../theme/RTLContext';
+import api, { setAuthToken } from '../../services/api';
 
 export default function OTPVerificationScreen({ navigation, route }) {
   const { theme } = useTheme();
@@ -12,9 +13,33 @@ export default function OTPVerificationScreen({ navigation, route }) {
   const { t } = useTranslation();
   
   const [otp, setOtp] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleVerify = () => {
-    navigation.navigate('ProfileSetup');
+  const handleVerify = async () => {
+    setError(null);
+    if (otp.length < 4) {
+      setError(t('Please enter a valid 4-digit code'));
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const userId = route.params?.user_id;
+      
+      const response = await api.verifyOtp({ user_id: userId, otp_code: otp });
+      
+      if (response.success && response.data?.token) {
+        await setAuthToken(response.data.token);
+        navigation.navigate('ProfileSetup');
+      } else {
+        setError(response.message_ar || response.message_en || t('Verification failed'));
+      }
+    } catch (e) {
+      setError(e.message || t('An error occurred'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -47,6 +72,14 @@ export default function OTPVerificationScreen({ navigation, route }) {
 
         <View style={[styles.card, { backgroundColor: theme.colors.surface, shadowColor: theme.colors.text }]}>
           <View style={styles.form}>
+            
+            {error ? (
+              <View style={[styles.errorBox, { backgroundColor: '#EF444420', borderColor: '#EF4444' }]}>
+                <Ionicons name="alert-circle" size={20} color="#EF4444" />
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : null}
+
             <View style={[styles.inputContainer, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
               <TextInput
                 style={[styles.input, { color: theme.colors.text }]}
@@ -64,6 +97,7 @@ export default function OTPVerificationScreen({ navigation, route }) {
               activeOpacity={0.8}
               onPress={handleVerify}
               style={styles.buttonContainer}
+              disabled={loading}
             >
               <LinearGradient
                 colors={[theme.colors.primary, '#6B89FF']}
@@ -71,8 +105,8 @@ export default function OTPVerificationScreen({ navigation, route }) {
                 end={{ x: 1, y: 0 }}
                 style={[styles.button, rtl.row, rtl.row]}
               >
-                <Text style={styles.buttonText}>{t('Verify OTP')}</Text>
-                <Ionicons name="checkmark-circle-outline" size={24} color="#FFF" style={styles.buttonIcon} />
+                <Text style={styles.buttonText}>{loading ? t('Verifying...') : t('Verify OTP')}</Text>
+                {!loading && <Ionicons name="checkmark-circle-outline" size={24} color="#FFF" style={styles.buttonIcon} />}
               </LinearGradient>
             </TouchableOpacity>
 
@@ -208,5 +242,19 @@ const styles = StyleSheet.create({
   },
   resendLink: {
     fontWeight: 'bold',
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  errorText: {
+    color: '#EF4444',
+    marginStart: 8,
+    flex: 1,
+    fontSize: 14,
   },
 });

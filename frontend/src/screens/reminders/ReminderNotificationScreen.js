@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRTLStyle } from '../../theme/RTLContext';
+import { Audio } from 'expo-av';
 import api from '../../services/api';
 
 export default function ReminderNotificationScreen({ route, navigation }) {
@@ -14,10 +15,48 @@ export default function ReminderNotificationScreen({ route, navigation }) {
 
   const [upcomingIntake, setUpcomingIntake] = useState(null);
   const [loading, setLoading] = useState(true);
+  const soundRef = useRef(null);
 
   useEffect(() => {
     fetchUpcomingIntake();
+    playAlarmSound();
+
+    return () => {
+      stopAlarmSound();
+    };
   }, []);
+
+  const playAlarmSound = async () => {
+    try {
+      await Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: true,
+        shouldDuckAndroid: true,
+      });
+
+      // Using a public domain alarm sound URL for demonstration
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: 'https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg' },
+        { shouldPlay: true, isLooping: true, volume: 1.0 }
+      );
+      soundRef.current = sound;
+      await sound.playAsync();
+    } catch (e) {
+      console.log('Error playing alarm sound:', e);
+    }
+  };
+
+  const stopAlarmSound = async () => {
+    try {
+      if (soundRef.current) {
+        await soundRef.current.stopAsync();
+        await soundRef.current.unloadAsync();
+        soundRef.current = null;
+      }
+    } catch (e) {
+      console.log('Error stopping alarm sound:', e);
+    }
+  };
 
   const fetchUpcomingIntake = async () => {
     try {
@@ -36,6 +75,7 @@ export default function ReminderNotificationScreen({ route, navigation }) {
   const medicationName = upcomingIntake?.medication?.name || route.params?.medicationName || 'Your Medication';
 
   const handleTake = async () => {
+    await stopAlarmSound();
     if (upcomingIntake && upcomingIntake.medication_id) {
       try {
         await api.logIntake({
@@ -54,7 +94,8 @@ export default function ReminderNotificationScreen({ route, navigation }) {
     }
   };
 
-  const handleSnooze = () => {
+  const handleSnooze = async () => {
+    await stopAlarmSound();
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {

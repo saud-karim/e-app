@@ -10,7 +10,7 @@ const COMMON_DISEASES = [
   'Diabetes', 'Hypertension', 'Asthma', 'Heart Disease', 'Arthritis', 'None'
 ];
 
-export default function ChronicDiseasesScreen({ navigation }) {
+export default function ChronicDiseasesScreen({ navigation, route }) {
   const { theme } = useTheme();
   const rtl = useRTLStyle();
   const { t } = useTranslation();
@@ -37,7 +37,17 @@ export default function ChronicDiseasesScreen({ navigation }) {
   };
 
   const handleNext = () => {
-    navigation.navigate('Allergies');
+    let finalDiseases = [...selectedDiseases];
+    if (otherDisease && !finalDiseases.includes(otherDisease)) {
+      finalDiseases.push(otherDisease);
+    }
+    if (finalDiseases.length > 1 && finalDiseases.includes('None')) {
+       finalDiseases = finalDiseases.filter(d => d !== 'None');
+    }
+    navigation.navigate('Allergies', {
+      ...route.params,
+      chronic_diseases: finalDiseases
+    });
   };
 
   return (
